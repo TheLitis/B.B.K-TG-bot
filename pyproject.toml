@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lgpol-bot"
+version = "0.1.0"
+description = "Demo MVP Telegram bot for Lgpol/«В.В.К.» flooring catalogue"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "Lgpol Bot Team"}
+]
+dependencies = [
+  "aiogram==3.*",
+  "pydantic>=2.3,<3.0",
+  "jinja2>=3.1",
+  "python-dotenv>=1.0",
+  "openpyxl>=3.1",
+  "PyYAML>=6.0",
+  "uvloop>=0.17; platform_system == 'Linux'"
+]
+
+[project.optional-dependencies]
+dev = [
+  "black>=24.3",
+  "ruff>=0.4",
+  "pytest>=8.2",
+  "pytest-asyncio>=0.23"
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "I", "UP", "B", "N", "ANN", "C90"]
+ignore = ["ANN101", "ANN102", "ANN204"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-q"
+testpaths = ["tests"]

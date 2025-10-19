@@ -1,0 +1,4 @@
+[
+  "tests/test_picker.py::test_calc_required_with_pack_step",
+  "tests/test_picker.py::test_inventory_search_filters"
+]

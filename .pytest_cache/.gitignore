@@ -1,0 +1,16 @@
+# Created by pytest automatically.
+*.log
+*.tmp
+
+AGENTS.md
+
+@"
+# VSCode
+.vscode/
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+desktop.ini
+"@ | Out-File -Encoding utf8 -FilePath ".gitignore"
