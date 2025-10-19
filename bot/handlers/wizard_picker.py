@@ -18,6 +18,67 @@ from ..utils.formatting import calc_required
 router = Router(name="wizard")
 
 
+async def _maybe_redirect_menu(message: Message, state: FSMContext) -> bool:
+    """If user pressed a main menu button during the wizard, exit wizard and route.
+
+    Returns True if handled.
+    """
+    text = (message.text or "").strip()
+    if not text:
+        return False
+
+    ctx = get_app_context()
+    labels = ctx.text_library.menu_labels()
+    # Build reverse map label->key
+    rev = {v: k for k, v in labels.items() if v}
+    key = rev.get(text)
+    if not key:
+        return False
+
+    await state.clear()
+
+    # Lazy imports to avoid circulars
+    if key == "pick":
+        await start_picker(message, state)
+        return True
+    elif key == "catalog":
+        from .catalog_browse import show_catalog_menu
+
+        await show_catalog_menu(message, state)
+        return True
+    elif key == "delivery":
+        from .delivery_payment import delivery_block
+
+        await delivery_block(message)
+        return True
+    elif key == "payment":
+        from .delivery_payment import payment_block
+
+        await payment_block(message)
+        return True
+    elif key == "promos":
+        from .partners import show_promos
+
+        await show_promos(message)
+        return True
+    elif key == "samples":
+        from .support_feedback import samples_start
+
+        await samples_start(message, state)
+        return True
+    elif key == "manager":
+        from .support_feedback import manager_menu
+
+        await manager_menu(message)
+        return True
+    elif key == "contacts":
+        from .support_feedback import contacts
+
+        await contacts(message)
+        return True
+
+    return False
+
 @router.message(menu_choice("pick"))
 async def start_picker(message: Message, state: FSMContext) -> None:
     await state.clear()
@@ -32,6 +93,8 @@ async def start_picker(message: Message, state: FSMContext) -> None:
 
 @router.message(PickerWizard.application_area)
 async def handle_application_area(message: Message, state: FSMContext) -> None:
+    if await _maybe_redirect_menu(message, state):
+        return
     await state.update_data(application_area=message.text.strip())
     ctx = get_app_context()
     questions = ctx.text_library.picker_questions()
@@ -44,6 +107,8 @@ async def handle_application_area(message: Message, state: FSMContext) -> None:
 
 @router.message(PickerWizard.material_type)
 async def handle_material_type(message: Message, state: FSMContext) -> None:
+    if await _maybe_redirect_menu(message, state):
+        return
     await state.update_data(material_type=message.text.strip())
     ctx = get_app_context()
     questions = ctx.text_library.picker_questions()
@@ -58,6 +123,8 @@ async def handle_material_type(message: Message, state: FSMContext) -> None:
 
 @router.message(PickerWizard.usage_class)
 async def handle_usage_class(message: Message, state: FSMContext) -> None:
+    if await _maybe_redirect_menu(message, state):
+        return
     await state.update_data(usage_class=message.text.strip())
     ctx = get_app_context()
     questions = ctx.text_library.picker_questions()
@@ -70,6 +137,8 @@ async def handle_usage_class(message: Message, state: FSMContext) -> None:
 
 @router.message(PickerWizard.design_preferences)
 async def handle_design_preferences(message: Message, state: FSMContext) -> None:
+    if await _maybe_redirect_menu(message, state):
+        return
     await state.update_data(design_preferences=message.text.strip())
     ctx = get_app_context()
     questions = ctx.text_library.picker_questions()
@@ -84,6 +153,8 @@ async def handle_design_preferences(message: Message, state: FSMContext) -> None
 
 @router.message(PickerWizard.metrics)
 async def handle_metrics(message: Message, state: FSMContext) -> None:
+    if await _maybe_redirect_menu(message, state):
+        return
     raw = (message.text or "").replace(",", ".").split()
     if not raw:
         await message.answer("Укажите площадь в квадратных метрах и запас, например: 120 8")
@@ -107,6 +178,8 @@ async def handle_metrics(message: Message, state: FSMContext) -> None:
 
 @router.message(PickerWizard.budget)
 async def handle_budget(message: Message, state: FSMContext) -> None:
+    if await _maybe_redirect_menu(message, state):
+        return
     budget_value = None
     budget_text = (message.text or "").strip().replace(" ", "")
     if budget_text:

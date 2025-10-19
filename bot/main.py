@@ -8,6 +8,7 @@ from contextlib import suppress
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from .config import Settings, get_settings
@@ -30,7 +31,10 @@ logger = logging.getLogger(__name__)
 
 
 async def start_bot(settings: Settings) -> None:
-    bot = Bot(token=settings.bot_token.get_secret_value(), parse_mode=ParseMode.HTML)
+    bot = Bot(
+        token=settings.bot_token.get_secret_value(),
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+    )
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 
@@ -68,6 +72,7 @@ async def start_bot(settings: Settings) -> None:
         )
     else:
         logger.info("Starting bot in long-polling mode")
+        await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 

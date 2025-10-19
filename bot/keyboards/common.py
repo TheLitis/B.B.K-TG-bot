@@ -11,26 +11,36 @@ from aiogram.types import (
 
 
 def build_main_menu(labels: dict[str, str]) -> ReplyKeyboardMarkup:
-    """Create the main reply keyboard using style labels."""
+    """Create the main reply keyboard from non-empty labels.
 
-    rows = [
-        [
-            KeyboardButton(text=labels.get("pick", "🧭 Подбор")),
-            KeyboardButton(text=labels.get("catalog", "🛍 Каталог")),
-        ],
-        [
-            KeyboardButton(text=labels.get("delivery", "🚚 Доставка")),
-            KeyboardButton(text=labels.get("payment", "💳 Оплата")),
-        ],
-        [
-            KeyboardButton(text=labels.get("promos", "🎯 Акции")),
-            KeyboardButton(text=labels.get("samples", "📦 Образцы")),
-        ],
-        [
-            KeyboardButton(text=labels.get("manager", "👤 Менеджер")),
-            KeyboardButton(text=labels.get("contacts", "📞 Контакты")),
-        ],
+    Hide a menu item by setting its label to an empty string in styles.yaml.
+    Layout: 2 buttons per row.
+    """
+
+    order = [
+        "pick",
+        "catalog",
+        "delivery",
+        "payment",
+        "promos",
+        "samples",
+        "manager",
+        "contacts",
     ]
+
+    buttons: list[KeyboardButton] = []
+    for key in order:
+        text = labels.get(key)
+        if text and text.strip():
+            buttons.append(KeyboardButton(text=text))
+
+    rows: list[list[KeyboardButton]] = []
+    for i in range(0, len(buttons), 2):
+        rows.append(buttons[i : i + 2])
+
+    if not rows:
+        rows = [[KeyboardButton(text="🧭 Подбор")]]
+
     return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
 
@@ -76,4 +86,3 @@ __all__ = [
     "consent_keyboard",
     "back_to_menu_button",
 ]
-

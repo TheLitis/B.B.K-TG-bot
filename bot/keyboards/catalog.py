@@ -18,14 +18,14 @@ def categories_keyboard(categories: Iterable[str]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def filter_keyboard(filter_name: str, options: Iterable[str]) -> InlineKeyboardMarkup:
+def filter_keyboard(filter_name: str, options: dict[str, str]) -> InlineKeyboardMarkup:
     keyboard: list[list[InlineKeyboardButton]] = []
-    for option in options:
+    for key, option in options.items():
         keyboard.append(
             [
                 InlineKeyboardButton(
                     text=option,
-                    callback_data=f"catalog:filter:{filter_name}:{option}",
+                    callback_data=f"catalog:filter:{filter_name}:{key}",
                 )
             ]
         )
@@ -87,4 +87,3 @@ __all__ = [
     "product_actions_keyboard",
     "selection_manage_keyboard",
 ]
-
