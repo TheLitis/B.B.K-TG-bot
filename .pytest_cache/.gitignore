@@ -2,8 +2,6 @@
 *.log
 *.tmp
 
-AGENTS.md
-
 @"
 # VSCode
 .vscode/
