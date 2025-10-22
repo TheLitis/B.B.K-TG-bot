@@ -82,15 +82,15 @@ class TextLibrary:
             self.styles.get(
                 "product_card_template",
                 """
-{{ product.category }} • {{ product.brand }} • {{ product.name }}
+<b>{{ product.category }}</b> • {{ product.brand }} • {{ product.name }}
 Страна: {{ product.country|fallback }}
-Класс: {{ product.primary_class()|fallback }}
+Класс: {{ product.usage_class|fallback }}
 Состав: {{ product.composition|fallback(product.fiber|fallback) }}
 Свойства: {{ product.props|join(", ") if product.props else "—" }}
 Цвет / рисунок: {{ product.color|fallback }} / {{ product.pattern|fallback }}
-Рекомендации: {{ product.use|join(", ") if product.use else "—" }}
+Рекомендуем: {{ product.use|join(", ") if product.use else "—" }}
 {% if required_m2 %}Расчёт: {{ "%.2f"|format(required_m2) }} м²{% endif %}
-{% if price %}Ориентир по цене: {{ price | round(2) }} ₽/м²{% endif %}
+{% if price %}Ориентир по цене: <b>{{ "%.0f"|format(price) }} ₽/м²</b>{% endif %}
 """,
             )
         )
@@ -103,4 +103,3 @@ def get_text_library(data_dir: Path) -> TextLibrary:
 
 
 __all__ = ["TextLibrary", "get_text_library"]
-

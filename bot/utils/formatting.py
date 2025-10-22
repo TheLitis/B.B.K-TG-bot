@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from html import escape
 from math import ceil
 from typing import Iterable
+
+from aiogram.types import User
 
 
 def calc_required(area_m2: float, waste_pct: int, pack_step: float | None) -> float:
@@ -31,3 +34,19 @@ def bulletize(lines: Iterable[str]) -> str:
 
 __all__ = ["calc_required", "bulletize"]
 
+
+def mention_html(user: User | None) -> str:
+    """Render a clickable mention for Telegram messages (HTML parse mode)."""
+
+    if user is None:
+        return "клиент"
+
+    if user.username:
+        username = escape(user.username)
+        return f"<a href=\"https://t.me/{username}\">@{username}</a>"
+
+    full_name = escape(user.full_name or "клиент")
+    return f"<a href=\"tg://user?id={user.id}\">{full_name}</a>"
+
+
+__all__.append("mention_html")

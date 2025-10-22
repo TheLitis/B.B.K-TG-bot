@@ -18,6 +18,7 @@ from ..context import get_app_context
 from ..filters import menu_choice
 from ..keyboards.common import consent_keyboard
 from ..states import ManagerCallForm, ManagerQuestionForm, SamplesForm
+from ..utils.formatting import mention_html
 
 router = Router(name="support")
 
@@ -159,9 +160,10 @@ async def samples_confirm_yes(callback: CallbackQuery, state: FSMContext) -> Non
     document = BufferedInputFile(payload.getvalue(), filename="lgpol_samples.xlsx")
 
     manager_chat = ctx.settings.manager_chat_id
+    mention = mention_html(user)
     await callback.bot.send_message(
         manager_chat,
-        f"Запрос образцов от {customer['Имя']} ({customer['Телефон']}).",
+        f"Запрос образцов от {mention} ({customer['Телефон']}).",
     )
     await callback.bot.send_document(manager_chat, document)
     await callback.answer("Заявка отправлена.")
@@ -273,10 +275,10 @@ async def manager_callback_confirm(callback: CallbackQuery, state: FSMContext) -
     data = await state.get_data()
     await state.clear()
     user = callback.from_user
+    mention = mention_html(user)
     await callback.bot.send_message(
         ctx.settings.manager_chat_id,
-        f"Запрос перезвонить от {user.full_name if user else 'клиента'} "
-        f"({user.id if user else ''}).\n"
+        f"Запрос перезвонить от {mention}.\n"
         f"Телефон: {data.get('phone')}\n"
         f"Время: {data.get('preferred_time')}",
     )
@@ -360,9 +362,10 @@ async def manager_question_confirm(callback: CallbackQuery, state: FSMContext) -
     data = await state.get_data()
     await state.clear()
     user = callback.from_user
+    mention = mention_html(user)
     await callback.bot.send_message(
         ctx.settings.manager_chat_id,
-        f"Сообщение от {user.full_name if user else 'клиента'} ({user.id if user else ''}).\n"
+        f"Сообщение от {mention}.\n"
         f"Контакты: {data.get('contact')}\n"
         f"Тема: {data.get('question')}",
     )

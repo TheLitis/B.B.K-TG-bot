@@ -34,12 +34,6 @@ class Product(BaseModel):
 
     model_config = {"populate_by_name": True}
 
-    @property
-    def primary_class(self) -> str | None:
-        """Return a normalized class string."""
-
-        return self.usage_class
-
 
 class CategoryDescriptor(BaseModel):
     """Basic information about a catalogue category."""

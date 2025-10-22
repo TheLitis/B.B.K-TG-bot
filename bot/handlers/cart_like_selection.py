@@ -159,6 +159,8 @@ async def send_selection_to_manager(callback: CallbackQuery) -> None:
         await callback.answer("Подборка пуста.")
         return
 
+    from ..utils.formatting import mention_html
+
     customer = {
         "Имя": user.full_name if user else "",
         "Телеграм": f"@{user.username}" if user and user.username else "",
@@ -170,9 +172,10 @@ async def send_selection_to_manager(callback: CallbackQuery) -> None:
     payload = selection_to_workbook(items, customer=customer, company=ctx.text_library.company)
     document = BufferedInputFile(payload.getvalue(), filename=f"lgpol_request_{user_id}.xlsx")
     manager_chat = ctx.settings.manager_chat_id
+    mention = mention_html(user)
     await callback.bot.send_message(
         manager_chat,
-        f"Новая заявка из подборки от {customer['Имя']} ({customer['Телеграм']}).",
+        f"Новая заявка из подборки от {mention}.",
     )
     await callback.bot.send_document(manager_chat, document)
     await callback.answer("Отправили заявку менеджеру.")
