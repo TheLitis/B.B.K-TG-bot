@@ -7,7 +7,8 @@ import hashlib
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
+from aiogram.exceptions import TelegramBadRequest
 
 from ..context import get_app_context
 from ..filters import menu_choice
@@ -161,9 +162,12 @@ async def _ask_next_filter(
         "catalog_filter_question",
         "Выберите значение для фильтра «{filter}»:",
     )
-    await message.answer(
-        question_template.format(filter=filter_name),
-        reply_markup=filter_keyboard(filter_name, option_map),
+    prompt_text = _build_filter_prompt(category, filters, filter_name, question_template)
+
+    await _render_prompt(
+        message,
+        prompt_text,
+        filter_keyboard(filter_name, option_map),
     )
 
 
@@ -184,16 +188,50 @@ async def _show_results(
             "catalog_no_results",
             "Не нашёл подходящих позиций. Попробуем ослабить фильтры или выбрать другую категорию?",
         )
-        await message.answer(prompt, reply_markup=categories_keyboard(categories))
+        await _render_prompt(message, prompt, categories_keyboard(categories))
         return
 
     intro_template = ctx.text_library.styles.get(
         "catalog_results_intro",
         "Нашли {count} вариантов по заданным условиям:",
     )
-    await message.answer(intro_template.format(count=len(products)))
+    await _render_prompt(
+        message,
+        intro_template.format(count=len(products)),
+        None,
+    )
 
     for product in products[:6]:
         price = ctx.pricing.price(product.sku)
         text = ctx.text_library.render_product_card(product, price=price)
         await message.answer(text, reply_markup=product_actions_keyboard(product))
+
+
+def _build_filter_prompt(
+    category: str,
+    applied_filters: dict[str, str],
+    current_filter: str,
+    caption_template: str,
+) -> str:
+    selected_lines = "\n".join(f"• {name}: {value}" for name, value in applied_filters.items())
+    selected_block = (
+        f"📌 Уже выбрано:\n{selected_lines}\n\n" if selected_lines else ""
+    )
+    caption = caption_template.format(filter=current_filter)
+    return f"🛍 <b>{category}</b>\n\n{selected_block}{caption}"
+
+
+async def _render_prompt(
+    message: Message,
+    text: str,
+    keyboard: InlineKeyboardMarkup | None,
+) -> None:
+    try:
+        await message.edit_text(text, reply_markup=keyboard)
+    except TelegramBadRequest:
+        if message.chat and message.message_id:
+            try:
+                await message.delete()
+            except TelegramBadRequest:
+                pass
+        await message.answer(text, reply_markup=keyboard)
