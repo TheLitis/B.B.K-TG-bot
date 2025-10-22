@@ -141,7 +141,7 @@ async def _ask_next_filter(
 
     if step >= len(descriptor.filters):
         await state.update_data({"catalog_options": {}})
-        await _show_results(message, category, filters)
+        await _show_results(message, state, category, filters)
         return
 
     filter_name = descriptor.filters[step]
@@ -167,11 +167,24 @@ async def _ask_next_filter(
     )
 
 
-async def _show_results(message: Message, category: str, filters: dict[str, str]) -> None:
+async def _show_results(
+    message: Message,
+    state: FSMContext,
+    category: str,
+    filters: dict[str, str],
+) -> None:
     ctx = get_app_context()
     products = ctx.inventory.search(category, filters)
     if not products:
-        await message.answer("Данных по заданным фильтрам не найдено. Попробуйте ослабить условия.")
+        categories = [descriptor.name for descriptor in ctx.inventory.categories()]
+        await state.update_data(
+            {SESSION_KEY: {"filters": {}, "category": None, "step": 0}, "catalog_options": {}}
+        )
+        prompt = ctx.text_library.styles.get(
+            "catalog_no_results",
+            "Не нашёл подходящих позиций. Попробуем ослабить фильтры или выбрать другую категорию?",
+        )
+        await message.answer(prompt, reply_markup=categories_keyboard(categories))
         return
 
     intro_template = ctx.text_library.styles.get(

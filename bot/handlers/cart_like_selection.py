@@ -13,7 +13,7 @@ from ..keyboards.catalog import selection_manage_keyboard
 from ..services.selection_store import SelectionEntry
 from ..services.wizard_memory import wizard_memory
 from ..states import SelectionMetrics
-from ..utils.formatting import calc_required
+from ..utils.formatting import calc_required, mention_html
 
 router = Router(name="selection")
 
@@ -186,6 +186,57 @@ async def send_selection_to_manager(callback: CallbackQuery) -> None:
     await callback.bot.send_document(manager_chat, document)
     await callback.answer("Отправили заявку менеджеру.")
     await callback.message.answer("Заявка передана менеджеру. Мы свяжемся с вами отдельно.")
+
+
+@router.callback_query(F.data.startswith("selection:samples:"))
+async def request_samples_from_card(callback: CallbackQuery) -> None:
+    ctx = get_app_context()
+    sku = callback.data.split(":")[2]
+    product = ctx.inventory.get(sku)
+    mention = mention_html(callback.from_user)
+    title = product.name if product else sku
+    await callback.answer("Запрос отправлен")
+    await callback.bot.send_message(
+        ctx.settings.manager_chat_id,
+        f"Запрос образцов по {title} (SKU {sku}) от {mention}.",
+    )
+    await callback.message.answer(
+        "Передал запрос на образцы менеджеру. Уточним логистику и свяжемся с вами."
+    )
+
+
+@router.callback_query(F.data.startswith("selection:passport:"))
+async def request_passport_from_card(callback: CallbackQuery) -> None:
+    ctx = get_app_context()
+    sku = callback.data.split(":")[2]
+    product = ctx.inventory.get(sku)
+    mention = mention_html(callback.from_user)
+    title = product.name if product else sku
+    await callback.answer("Запрос отправлен")
+    await callback.bot.send_message(
+        ctx.settings.manager_chat_id,
+        f"Запрос паспорта/сертификата по {title} (SKU {sku}) от {mention}.",
+    )
+    await callback.message.answer(
+        "Паспорт и сертификаты передадим в ответном сообщении. Менеджер уже уведомлён."
+    )
+
+
+@router.callback_query(F.data.startswith("selection:quote:"))
+async def request_quote_from_card(callback: CallbackQuery) -> None:
+    ctx = get_app_context()
+    sku = callback.data.split(":")[2]
+    product = ctx.inventory.get(sku)
+    mention = mention_html(callback.from_user)
+    title = product.name if product else sku
+    await callback.answer("Запрос отправлен")
+    await callback.bot.send_message(
+        ctx.settings.manager_chat_id,
+        f"Запрос расчёта по {title} (SKU {sku}) от {mention}.",
+    )
+    await callback.message.answer(
+        "Передал запрос на расчёт. Как только подготовим предложение, менеджер свяжется с вами."
+    )
 
 
 def _selection_summary(user_id: int) -> tuple[str, InlineKeyboardMarkup | None]:

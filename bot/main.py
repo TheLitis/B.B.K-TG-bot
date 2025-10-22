@@ -22,6 +22,7 @@ from .handlers import (
     support_feedback,
     wizard_picker,
 )
+from .middlewares.rate_limit import RateLimitMiddleware
 from .services.inventory_stub import InventoryStub
 from .services.pricing_stub import PricingStub
 from .services.selection_store import SelectionStore
@@ -37,6 +38,8 @@ async def start_bot(settings: Settings) -> None:
     )
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
+    dp.message.middleware(RateLimitMiddleware(interval=0.6))
+    dp.callback_query.middleware(RateLimitMiddleware(interval=0.4))
 
     text_library = get_text_library(settings.data_dir)
     inventory = InventoryStub(settings.data_dir / "catalog.json")
