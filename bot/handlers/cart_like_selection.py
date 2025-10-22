@@ -6,9 +6,10 @@ from typing import Any
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile, CallbackQuery, Message
+from aiogram.types import BufferedInputFile, CallbackQuery, InlineKeyboardMarkup, Message
 
 from ..context import get_app_context
+from ..keyboards.catalog import selection_manage_keyboard
 from ..services.selection_store import SelectionEntry
 from ..services.wizard_memory import wizard_memory
 from ..states import SelectionMetrics
@@ -45,7 +46,8 @@ async def add_to_selection(callback: CallbackQuery, state: FSMContext) -> None:
         )
         ctx.selection_store.add(user_id, entry)
         await callback.answer("Добавлено в подборку.")
-        await callback.message.answer(_selection_summary(user_id))
+        summary_text, keyboard = _selection_summary(user_id)
+        await callback.message.answer(summary_text, reply_markup=keyboard)
         return
 
     await callback.answer()
@@ -99,7 +101,11 @@ async def collect_selection_metrics(message: Message, state: FSMContext) -> None
     user_id = message.from_user.id if message.from_user else 0
     if user_id:
         ctx.selection_store.add(user_id, entry)
-        await message.answer("Позиция добавлена в подборку.\n" + _selection_summary(user_id))
+        summary_text, keyboard = _selection_summary(user_id)
+        await message.answer(
+            "Позиция добавлена в подборку.\n" + summary_text,
+            reply_markup=keyboard,
+        )
     else:
         await message.answer("Не удалось привязать подборку к пользователю.")
 
@@ -182,11 +188,11 @@ async def send_selection_to_manager(callback: CallbackQuery) -> None:
     await callback.message.answer("Заявка передана менеджеру. Мы свяжемся с вами отдельно.")
 
 
-def _selection_summary(user_id: int) -> str:
+def _selection_summary(user_id: int) -> tuple[str, InlineKeyboardMarkup | None]:
     ctx = get_app_context()
     items = ctx.selection_store.list(user_id)
     if not items:
-        return "Подборка пуста."
+        return "Подборка пуста.", None
 
     lines = [
         "Текущая подборка:",
@@ -200,4 +206,4 @@ def _selection_summary(user_id: int) -> str:
 
     lines.append(f"Итого: {total:.2f} м²")
     lines.append("Можно экспортировать в Excel или отправить менеджеру.")
-    return "\n".join(lines)
+    return "\n".join(lines), selection_manage_keyboard()
